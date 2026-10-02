@@ -23,21 +23,33 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify(devices));
   }
   else if (req.url === '/devices' && req.method === 'POST') {
-    res.statusCode = 201;
     res.setHeader('Content-Type', 'application/json');
     let body = "";
     req.on('data', (chunk) => {
       body += chunk;
     });
     req.on('end', () => {
-      const newDevice = JSON.parse(body);
-      const createdDevice = { ...newDevice,id: devices.length + 1 };
-      devices.push(createdDevice);
-      console.log("Devices now:",devices);
-      res.end(JSON.stringify(createdDevice));
-      console.log('post result is:', createdDevice);
-    })
+      try {
+        const newDevice = JSON.parse(body);
+        const createdDevice = { ...newDevice, id: devices.length + 1 };
+        devices.push(createdDevice);
+        res.statusCode = 201;
+        console.log("Devices now:", devices);
+        res.end(JSON.stringify(createdDevice));
+        console.log('post result is:', createdDevice);
+      }
+      catch (e) {
+        res.statusCode = 400;
 
+        console.log("JSON parse error:", e.message);
+        const errorResponse = {
+            error: "Bad Request",
+            message: "Invalid JSON"
+          };
+
+        res.end(JSON.stringify(errorResponse));
+      }
+    })
   }
   else {
     res.statusCode = 404;
